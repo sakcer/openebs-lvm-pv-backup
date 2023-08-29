@@ -1,0 +1,14 @@
+apiVersion: br.sealos.io.sealos.io/v1
+kind: Backup
+metadata:
+  labels:
+    app.kubernetes.io/name: backup
+    app.kubernetes.io/instance: backup-sample
+    app.kubernetes.io/part-of: tmp
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/created-by: tmp
+  name: test
+spec:
+  # persistentVolumeName: pvc-3198f815-13ca-42f5-a0f0-4e776c06006f
+  persistentVolumeClaim:
+    name: pvc-test

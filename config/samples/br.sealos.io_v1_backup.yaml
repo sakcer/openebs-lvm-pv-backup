@@ -1,0 +1,12 @@
+apiVersion: br.sealos.io.sealos.io/v1
+kind: Backup
+metadata:
+  labels:
+    app.kubernetes.io/name: backup
+    app.kubernetes.io/instance: backup-sample
+    app.kubernetes.io/part-of: tmp
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/created-by: tmp
+  name: backup-sample
+spec:
+  # TODO(user): Add fields here

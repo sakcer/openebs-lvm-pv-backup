@@ -1,0 +1,5 @@
+## Append samples of your project ##
+resources:
+- br.sealos.io_v1_backup.yaml
+- br.sealos.io_v1_restore.yaml
+#+kubebuilder:scaffold:manifestskustomizesamples

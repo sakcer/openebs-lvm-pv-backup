@@ -1,0 +1,12 @@
+apiVersion: br.sealos.io.sealos.io/v1
+kind: Restore
+metadata:
+  labels:
+    app.kubernetes.io/name: restore
+    app.kubernetes.io/instance: restore-sample
+    app.kubernetes.io/part-of: tmp
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/created-by: tmp
+  name: restore-sample
+spec:
+  # TODO(user): Add fields here
