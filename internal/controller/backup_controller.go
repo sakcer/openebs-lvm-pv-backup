@@ -20,6 +20,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"sync"
 	"time"
 
 	corev1 "k8s.io/api/core/v1"
@@ -41,7 +42,7 @@ import (
 type BackupReconciler struct {
 	client.Client
 	Scheme   *runtime.Scheme
-	BackupOp backupfn.BackupOperator
+	BackupOp *backupfn.BackupOperator
 	NodeName string
 }
 
@@ -153,13 +154,20 @@ func (r *BackupReconciler) syncBackupPv(ctx context.Context, backup *backupv1.Ba
 		return errors.New("pvc not bounded")
 	}
 
-	if err := r.BackupOp.Backup(pvc.Spec.VolumeName, backupv1.Tags{
+	// lock := r.getObjectLock(pvc.Spec.VolumeName)
+	// lock.Lock()
+	// r.BackupOp.Lock.Lock()
+	ok, err := r.BackupOp.Backup(pvc.Spec.VolumeName, string(backup.UID), backupv1.Tags{
 		Namespace:  backup.Namespace,
-		BackupName: backup.Name,
-	}); err != nil {
+		BackupName: backup.Name})
+	// defer r.BackupOp.Lock.Unlock()
+	// defer lock.Unlock()
+
+	if !ok {
 		return err
 	}
 
+	fmt.Printf("Warning: %s\n", err)
 	backup.Status.Phase = "BackupPvc"
 	return nil
 }
@@ -180,6 +188,20 @@ func (r *BackupReconciler) pvcNeat(pvc *corev1.PersistentVolumeClaim) *corev1.Pe
 	}
 
 	return result
+}
+
+// 获取对象锁
+func (b *BackupReconciler) getObjectLock(object string) *sync.Mutex {
+	// 获取对象对应的锁，如果不存在则创建新的锁
+	b.BackupOp.Lock.Lock()
+	if lock, ok := b.BackupOp.ObjectLocks[object]; ok {
+		b.BackupOp.Lock.Unlock()
+		return lock
+	}
+	lock := &sync.Mutex{}
+	b.BackupOp.ObjectLocks[object] = lock
+	b.BackupOp.Lock.Unlock()
+	return lock
 }
 
 // SetupWithManager sets up the controller with the Manager.

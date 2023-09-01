@@ -1,0 +1,40 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: ubuntu
+  name: file
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ubuntu
+  template:
+    metadata:
+      labels:
+        app: ubuntu
+    spec:
+      securityContext:
+        runAsUser: 0
+          #privileged: true
+      volumes:
+      - name: data
+        persistentVolumeClaim:
+           claimName: vn-root-ubuntu-0
+      containers:
+      - name: ubuntu
+        securityContext:
+          privileged: true
+        command:
+        - /bin/bash
+        - -c
+        - while true; do echo hello world; sleep 1; done
+        image: ubuntu:latest
+        ports:
+        - containerPort: 80
+        # volumeDevices:
+        # - name: dev
+        #   devicePath: /dev/lvmvg
+        volumeMounts:
+        - name: data
+          mountPath: /data

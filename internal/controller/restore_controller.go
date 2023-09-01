@@ -19,6 +19,7 @@ package controller
 import (
 	"context"
 	"fmt"
+	"sync"
 	"time"
 
 	batchv1 "k8s.io/api/batch/v1"
@@ -41,7 +42,7 @@ import (
 type RestoreReconciler struct {
 	client.Client
 	Scheme   *runtime.Scheme
-	BackupOp backupfn.BackupOperator
+	BackupOp *backupfn.BackupOperator
 	NodeName string
 }
 
@@ -72,7 +73,7 @@ func (r *RestoreReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 	ok, err := r.validController(ctx, restore)
 	if err != nil {
 		fmt.Println(err)
-		return ctrl.Result{RequeueAfter: 10 * time.Second}, nil
+		return ctrl.Result{}, nil
 	}
 	if !ok {
 		return ctrl.Result{}, nil
@@ -200,13 +201,18 @@ func (r *RestoreReconciler) syncRestorePv(ctx context.Context, restore *backupv1
 
 	}
 
-	if err := r.BackupOp.Restore(pvc.Spec.VolumeName, backupv1.Tags{
+	// lock := r.getObjectLock(pvc.Spec.VolumeName)
+	// r.BackupOp.Lock.Lock()
+	ok, err := r.BackupOp.Restore(pvc.Spec.VolumeName, string(restore.UID), backupv1.Tags{
 		Namespace:  restore.Namespace,
 		BackupName: restore.Spec.BackupName,
-	}); err != nil {
+	})
+	// defer r.BackupOp.Lock.Unlock()
+	// defer lock.Unlock()
+	if !ok {
 		return err
 	}
-
+	fmt.Printf("Warning: %s\n", err)
 	restore.Status.Phase = "Completed"
 
 	return nil
@@ -215,8 +221,8 @@ func (r *RestoreReconciler) syncRestorePv(ctx context.Context, restore *backupv1
 func (r *RestoreReconciler) syncJob(ctx context.Context, req types.NamespacedName, node, pvc string) error {
 	job := &batchv1.Job{
 		ObjectMeta: v1.ObjectMeta{
-			Namespace:    req.Namespace,
-			GenerateName: req.Name,
+			Namespace: req.Namespace,
+			Name:      req.Name,
 		},
 		Spec: batchv1.JobSpec{
 			TTLSecondsAfterFinished: pointer.Int32(5),
@@ -268,9 +274,23 @@ func (r *RestoreReconciler) syncJob(ctx context.Context, req types.NamespacedNam
 		},
 	}
 	if err := r.Create(ctx, job); err != nil {
-		return err
+		return client.IgnoreAlreadyExists(err)
 	}
 	return nil
+}
+
+// 获取对象锁
+func (b *RestoreReconciler) getObjectLock(object string) *sync.Mutex {
+	// 获取对象对应的锁，如果不存在则创建新的锁
+	b.BackupOp.Lock.Lock()
+	if lock, ok := b.BackupOp.ObjectLocks[object]; ok {
+		b.BackupOp.Lock.Unlock()
+		return lock
+	}
+	lock := &sync.Mutex{}
+	b.BackupOp.ObjectLocks[object] = lock
+	b.BackupOp.Lock.Unlock()
+	return lock
 }
 
 // SetupWithManager sets up the controller with the Manager.

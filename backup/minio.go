@@ -5,13 +5,16 @@ import (
 	"context"
 	"encoding/json"
 	"io"
+	"sync"
 
 	"github.com/minio/minio-go/v7"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 type BackupOperator struct {
-	Minio *minio.Client
+	Minio       *minio.Client
+	ObjectLocks map[string]*sync.Mutex
+	Lock        sync.Mutex
 }
 
 func (b *BackupOperator) Put(ctx context.Context, bucketName, objectName string, obj client.Object) error {

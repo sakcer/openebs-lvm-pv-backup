@@ -19,6 +19,10 @@ spec:
       jsonPath: .status.phase
       name: Phase
       type: string
+    - description: The Phase of Backup
+      jsonPath: .status.node
+      name: Node
+      type: string
     name: v1
     schema:
       openAPIV3Schema:
@@ -45,19 +49,20 @@ spec:
                 properties:
                   name:
                     type: string
-                  node:
-                    type: string
                 type: object
             type: object
           status:
             description: BackupStatus defines the observed state of Backup
             properties:
+              node:
+                type: string
               phase:
                 description: 'INSERT ADDITIONAL STATUS FIELD - define observed state
                   of cluster Important: Run "make" to regenerate code after modifying
                   this file'
                 type: string
             required:
+            - node
             - phase
             type: object
         type: object

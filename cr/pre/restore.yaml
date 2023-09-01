@@ -1,0 +1,15 @@
+apiVersion: br.sealos.io.sealos.io/v1
+kind: Restore
+metadata:
+  labels:
+    app.kubernetes.io/name: restore
+    app.kubernetes.io/instance: restore-sample
+    app.kubernetes.io/part-of: tmp
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/created-by: tmp
+  name: restore-sample
+spec:
+  # persistentVolumeName: pvc-38eecef3-5ce0-4000-917a-024ed5105683
+  persistentVolumeClaim:
+    name: vn-root-ubuntu-0
+  backupName: test

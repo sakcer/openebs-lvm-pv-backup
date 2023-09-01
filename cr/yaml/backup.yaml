@@ -1,0 +1,7 @@
+apiVersion: br.sealos.io.sealos.io/v1
+kind: Backup
+metadata:
+  name: {PVC}
+spec:
+  persistentVolumeClaim:
+    name: {PVC}

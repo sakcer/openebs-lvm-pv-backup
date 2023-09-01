@@ -1,0 +1,29 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: my-job         # Name of the Job
+spec:
+  ttlSecondsAfterFinished: 5
+  template:
+    spec:
+      restartPolicy: Never
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                - key: openebs.io/nodename
+                  operator: In
+                  values:
+                    - k8s
+      containers:
+      - name: my-container
+        image: busybox:latest
+        volumeMounts:
+        - name: data-volume
+          mountPath: /data   # Mount path of the PVC inside the container
+      volumes:
+      - name: data-volume
+        persistentVolumeClaim:
+          claimName: pvc-test
+  backoffLimit: 1    # Specify the number of retries for the Job
