@@ -20,7 +20,7 @@ import (
 	"flag"
 	"fmt"
 	"os"
-	"os/exec"
+	// "os/exec"
 
 	// Import all Kubernetes client auth plugins (e.g. Azure, GCP, OIDC, etc.)
 	// to ensure that exec-entrypoint and run can make use of them.
@@ -63,13 +63,13 @@ func main() {
 		return
 	}
 
-	cmd := exec.Command("ls", "/dev/lvmvg")
-	if out, err := cmd.Output(); err != nil {
-		fmt.Println(err)
-		return
-	} else {
-		fmt.Println(string(out))
-	}
+	// cmd := exec.Command("ls", "/dev/lvmvg")
+	// if out, err := cmd.Output(); err != nil {
+	// 	fmt.Println(err)
+	// 	return
+	// } else {
+	// 	fmt.Println(string(out))
+	// }
 
 	var metricsAddr string
 	var enableLeaderElection bool
@@ -97,7 +97,7 @@ func main() {
 		LeaderElection:         enableLeaderElection,
 		LeaderElectionID:       "8625453b.sealos.io",
 		Controller: config.Controller{
-			MaxConcurrentReconciles: 10,
+			MaxConcurrentReconciles: 1,
 		},
 		// LeaderElectionReleaseOnCancel defines if the leader should step down voluntarily
 		// when the Manager ends. This requires the binary to immediately end when the

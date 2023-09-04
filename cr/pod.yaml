@@ -1,0 +1,20 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: test
+spec:
+  containers:
+    - name: my-container
+      # image: busybox:latest
+      volumeMounts:
+        - name: shared-volume
+          mountPath: /
+      image: busybox:latest
+      command:
+      - /bin/sh
+      - -c
+      - while true; do echo hello world; sleep 1; done
+  volumes:
+    - name: shared-volume
+      persistentVolumeClaim:
+        claimName: pod-1

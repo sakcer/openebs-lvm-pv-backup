@@ -1,0 +1,7 @@
+apiVersion: br.sealos.io.sealos.io/v1
+kind: Backup
+metadata:
+  name: pod-1
+spec:
+  persistentVolumeClaim:
+    name: pod-1

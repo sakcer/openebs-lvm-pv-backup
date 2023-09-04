@@ -4,9 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"os"
 	"os/exec"
-	"path"
 	api "restic/api/v1"
 )
 
@@ -41,9 +39,9 @@ func (b *BackupOperator) ResticRestore(des string, id string) error {
 	return nil
 }
 
-func (b *BackupOperator) Restore(pv, uuid string, tags api.Tags) (bool, error) {
+func (b *BackupOperator) Restore(path string, tags api.Tags) (bool, error) {
 	// des := path.Join(api.TmpDir, pv)
-	src := path.Join(api.Source, pv)
+	// src := path.Join(api.Source, pv)
 
 	snapshots, err := b.ResticSnapshots(tags)
 	if err != nil {
@@ -52,35 +50,35 @@ func (b *BackupOperator) Restore(pv, uuid string, tags api.Tags) (bool, error) {
 		return true, errors.New("something wrong happend")
 	}
 
-	tmpDir := fmt.Sprintf("/tmp/restore-%s", uuid)
+	// tmpDir := fmt.Sprintf("/tmp/restore-%s", uuid)
 
-	if _, err := os.Stat(tmpDir); !os.IsNotExist(err) {
-		b.Unmount(tmpDir)
-		if err := os.Remove(tmpDir); err != nil {
-			return false, err
-		}
-	}
-	if out, err := exec.Command("mkdir", tmpDir).CombinedOutput(); err != nil {
-		return false, fmt.Errorf("Mkdir %s", string(out))
-	}
+	// if _, err := os.Stat(tmpDir); !os.IsNotExist(err) {
+	// 	b.Unmount(tmpDir)
+	// 	if err := os.Remove(tmpDir); err != nil {
+	// 		return false, err
+	// 	}
+	// }
+	// if out, err := exec.Command("mkdir", tmpDir).CombinedOutput(); err != nil {
+	// 	return false, fmt.Errorf("Mkdir %s", string(out))
+	// }
 	// tmpDir, err := ioutil.TempDir("", "pvc-backup")
 	// if err != nil {
 	// 	return err
 	// }
 
-	if err := b.Mount(src, tmpDir); err != nil {
+	// if err := b.Mount(src, tmpDir); err != nil {
+	// 	return false, err
+	// }
+	if err := b.ResticRestore(path, snapshots[0].ID); err != nil {
 		return false, err
 	}
-	if err := b.ResticRestore(tmpDir, snapshots[0].ID); err != nil {
-		return false, err
-	}
-	if err := b.Unmount(tmpDir); err != nil {
-		return false, err
-	}
+	// if err := b.Unmount(tmpDir); err != nil {
+	// 	return false, err
+	// }
 
-	if err := os.RemoveAll(tmpDir); err != nil {
-		return false, err
-	}
+	// if err := os.RemoveAll(tmpDir); err != nil {
+	// 	return false, err
+	// }
 
 	return true, nil
 }

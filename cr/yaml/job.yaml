@@ -1,0 +1,52 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: test
+spec:
+  ttlSecondsAfterFinished: 20
+  template:
+    spec:
+      restartPolicy: Never
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                - key: openebs.io/nodename
+                  operator: In
+                  values:
+                    - k8s
+      containers:
+      - name: my-container
+        image: sakcer/restic:latest
+        volumeMounts:
+        - name: data-volume
+          mountPath: /dev   # Mount path of the PVC inside the container
+        command:
+        - /restic.sh
+        env:
+        - name: BACKUPNAME
+          value: a
+        - name: NAMESPACE
+          value: b
+        - name: MOUNT
+          value: /dev/lvmvg/pvc-03db3ed1-eb02-4e67-b83c-14fb2f19a3ba
+        - name: AWS_ACCESS_KEY_ID
+          value: test
+        - name: AWS_SECRET_ACCESS_KEY
+          value: testtest
+        - name: SRC
+          value: /dev/lvmvg
+        - name: TMP
+          value: /tmp
+        - name: RESTIC_REPOSITORY
+          value: s3:http://10.162.17.233:9000/test
+        - name: RESTIC_PASSWORD
+          value: test
+        securityContext:
+          privileged: true
+      volumes:
+      - name: data-volume
+        hostPath:
+          path: /dev
+  backoffLimit: 1

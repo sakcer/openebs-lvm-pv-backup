@@ -6,12 +6,11 @@ import (
 	"io"
 	"os"
 	"os/exec"
-	"path"
 
 	api "restic/api/v1"
 )
 
-func (b *BackupOperator) ResticBackup(repo, filepath, backupName, pswd string, tags api.Tags) error {
+func (b *BackupOperator) ResticBackup(repo, filepath, pswd string, tags api.Tags) error {
 	str := fmt.Sprintf("%s:.", filepath)
 	resticCmd := exec.Command("proot", "-b", str, "restic", "backup", ".", "--tag", tags.BackupName, "--tag", tags.Namespace, "--tag", tags.Pvc, "--no-cache", "&", "wait", "$!")
 
@@ -55,8 +54,8 @@ func (b *BackupOperator) Unmount(des string) error {
 	return nil
 }
 
-func (b *BackupOperator) Backup(pv, uuid string, tags api.Tags) (bool, error) {
-	src := path.Join(api.Source, pv)
+func (b *BackupOperator) Backup(path string, tags api.Tags) (bool, error) {
+	// src := path.Join(api.Source, pv)
 
 	snapshots, err := b.ResticSnapshots(tags)
 	if err != nil {
@@ -65,36 +64,37 @@ func (b *BackupOperator) Backup(pv, uuid string, tags api.Tags) (bool, error) {
 		return true, errors.New("backup already exists")
 	}
 
-	tmpDir := fmt.Sprintf("/tmp/backup-%s", uuid)
-	if _, err := os.Stat(tmpDir); !os.IsNotExist(err) {
-		b.Unmount(tmpDir)
-		if err := os.Remove(tmpDir); err != nil {
-			return false, err
-		}
-	}
-	if out, err := exec.Command("mkdir", tmpDir).CombinedOutput(); err != nil {
-		return false, fmt.Errorf("Mkdir %s", string(out))
-	}
+	// tmpDir := fmt.Sprintf("/tmp/backup-%s", uuid)
+	// if _, err := os.Stat(tmpDir); !os.IsNotExist(err) {
+	// 	b.Unmount(tmpDir)
+	// 	if err := os.Remove(tmpDir); err != nil {
+	// 		return false, err
+	// 	}
+	// }
+
+	// if out, err := exec.Command("mkdir", tmpDir).CombinedOutput(); err != nil {
+	// 	return false, fmt.Errorf("Mkdir %s", string(out))
+	// }
 	// tmpDir, err := ioutil.TempDir("", "pvc-backup")
 	// if err != nil {
 	// 	return false, err
 	// }
 
-	if err := b.Mount(src, tmpDir); err != nil {
+	// if err := b.Mount(src, tmpDir); err != nil {
+	// 	return false, err
+	// }
+
+	if err := b.ResticBackup(api.Repo, path, api.Password, tags); err != nil {
 		return false, err
 	}
 
-	if err := b.ResticBackup(api.Repo, tmpDir, pv, api.Password, tags); err != nil {
-		return false, err
-	}
+	// if err := b.Unmount(tmpDir); err != nil {
+	// 	return false, err
+	// }
 
-	if err := b.Unmount(tmpDir); err != nil {
-		return false, err
-	}
-
-	if err := os.RemoveAll(tmpDir); err != nil {
-		return false, err
-	}
+	// if err := os.RemoveAll(tmpDir); err != nil {
+	// 	return false, err
+	// }
 
 	return true, nil
 }

@@ -30,7 +30,8 @@ var (
 
 func init() {
 	Password = os.Getenv("PASSWORD")
-	// Source = os.Getenv("SRC")
-	// TmpDir = os.Getenv("TMP")
-	Repo = os.Getenv("REPO")
+	AccessKeyID = os.Getenv("AWS_ACCESS_KEY_ID")
+	SecretAccessKey = os.Getenv("AWS_SECRET_ACCESS_KEY")
+	Repo = os.Getenv("RESTIC_REPOSITORY")
+	Password = os.Getenv("RESTIC_PASSWORD")
 }
